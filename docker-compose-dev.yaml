@@ -1,0 +1,109 @@
+services:
+    docker_dns_certbot:
+        build:
+            context: ./certbot_config
+        depends_on:
+            - docker_dns_nginx
+        env_file:
+            - scripts/env/secrets.env
+            - scripts/env/.effective-env.env
+        volumes:
+            - source: cert_data
+              target: /mnt/cert_data
+              type: volume
+            - source: nginx_data
+              target: /mnt/nginx_data
+              type: volume
+    docker_dns_docker_launcher:
+        build:
+            context: ./docker_launcher
+            shm_size: 256mb
+        env_file:
+            - scripts/env/secrets.env
+            - scripts/env/.effective-env.env
+        ports:
+            - 9000:9000
+        shm_size: 4gb
+        volumes:
+            - source: docker_launcher
+              target: /mnt/docker_launcher
+              type: volume
+            - source: /var/run/docker.sock
+              target: /var/run/docker.sock
+              type: bind
+            - source: /dev
+              target: /dev
+              type: bind
+            - source: ./docker_launcher
+              target: /mnt/host/docker_launcher
+              type: bind
+    docker_dns_nginx:
+        build:
+            context: ./nginx_config
+        depends_on:
+            - docker_dns_web_backend
+        env_file:
+            - scripts/env/secrets.env
+            - scripts/env/.effective-env.env
+        ports:
+            - 80:80
+            - 443:443
+        shm_size: 2gb
+        volumes:
+            - source: nginx_data
+              target: /mnt/nginx_data
+              type: volume
+            - source: static_files
+              target: /mnt/static_files
+              type: volume
+            - source: cert_data
+              target: /mnt/cert_data
+              type: volume
+    docker_dns_web_backend:
+        build:
+            context: ./web_backend
+            shm_size: 256mb
+        depends_on:
+            - frontend_build
+        env_file:
+            - scripts/env/secrets.env
+            - scripts/env/.effective-env.env
+        ports:
+            - 8080:8080
+        shm_size: 4gb
+        volumes:
+            - source: web_backend
+              target: /mnt/web_backend
+              type: volume
+            - source: frontend
+              target: /mnt/frontend
+              type: volume
+            - source: ./frontend
+              target: /mnt/host/frontend
+              type: bind
+            - source: ./web_backend
+              target: /mnt/host/web_backend
+              type: bind
+    frontend_build:
+        build:
+            args:
+                STAGE: ${STAGE}
+            context: ./frontend
+            shm_size: 1gb
+        volumes:
+            - source: frontend
+              target: /mnt/frontend
+              type: volume
+            - source: ./frontend
+              target: /mnt/host/frontend
+              type: bind
+version: "3.8"
+volumes:
+    cert_data: null
+    docker_launcher: null
+    frontend: null
+    nginx_data: null
+    postgres_data: null
+    redis_data: null
+    static_files: null
+    web_backend: null

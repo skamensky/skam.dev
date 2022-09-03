@@ -1,0 +1,99 @@
+version: '3.8'
+
+# we prefix services with "docker_dns" so that it's obvious that we're using docker's DNS resolution to access containers from within other containers
+services:
+  docker_dns_web_backend:
+    shm_size: '4gb'
+    build:
+      context: ./web_backend
+      shm_size: '256mb'
+    volumes:
+      - type: volume
+        source: web_backend
+        target: /mnt/web_backend
+      - type: volume
+        source: frontend
+        target: /mnt/frontend
+    env_file:
+      - scripts/env/secrets.env
+      - scripts/env/.effective-env.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - frontend_build
+  frontend_build:
+    build:
+      shm_size: '1gb'
+      context: ./frontend
+      args:
+        STAGE: ${STAGE}
+    volumes:
+      - type: volume
+        source: frontend
+        target: /mnt/frontend
+  docker_dns_docker_launcher:
+    shm_size: '4gb'
+    build:
+      context: ./docker_launcher
+      shm_size: '256mb'
+    volumes:
+      - type: volume
+        source: docker_launcher
+        target: /mnt/docker_launcher
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: /dev
+        target: /dev
+    env_file:
+      - scripts/env/secrets.env
+      - scripts/env/.effective-env.env
+    ports:
+      - "9000:9000"
+  docker_dns_nginx:
+    shm_size: '2gb'
+    build:
+      context: ./nginx_config
+    volumes:
+      - type: volume
+        source: nginx_data
+        target: /mnt/nginx_data
+      - type: volume
+        source: static_files
+        target: /mnt/static_files
+      - type: volume
+        source: cert_data
+        target: /mnt/cert_data
+    env_file:
+      - scripts/env/secrets.env
+      - scripts/env/.effective-env.env
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - docker_dns_web_backend
+  docker_dns_certbot:
+    build:
+      context: ./certbot_config
+    volumes:
+      - type: volume
+        source: cert_data
+        target: /mnt/cert_data
+      - type: volume
+        source: nginx_data
+        target: /mnt/nginx_data
+    depends_on:
+      - docker_dns_nginx
+    env_file:
+      - scripts/env/secrets.env
+      - scripts/env/.effective-env.env
+volumes:
+  redis_data:
+  nginx_data:
+  static_files:
+  postgres_data:
+  cert_data:
+  web_backend:
+  docker_launcher:
+  frontend:

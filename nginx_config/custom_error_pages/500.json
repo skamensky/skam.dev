@@ -1,0 +1,6 @@
+{
+    "status": "error",
+    "http_code": 500,
+    "message": "nginx returned a 500",
+    "data": null
+}

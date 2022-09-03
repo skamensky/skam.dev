@@ -1,0 +1,11 @@
+.idea
+tmp
+secrets.env
+node_modules
+.terraform*
+frontend/dist
+frontend/yarn-error.log
+postgres_config
+*tfstate*
+web_backend/main
+docker_launcher/main

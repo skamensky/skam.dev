@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = ".;dockerLauncherGRPC";
+
+service DockerLauncher {
+  // Sends a greeting
+  rpc StartContainer (Request) returns (Container){}
+  rpc RunningContainers(Request) returns (ContainerArrayResponse){}
+  rpc PurgeExpiredContainers(Request) returns (PurgeResponse){}
+}
+
+message Container{
+  string id = 1;
+}
+
+message ContainerArrayResponse{
+  repeated Container containers = 1;
+}
+
+message PurgeResponse{
+  repeated Container containers = 1;
+  int64 numFailures = 2;
+}
+
+
+message Request{}
+

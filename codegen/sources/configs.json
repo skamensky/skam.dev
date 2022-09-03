@@ -1,0 +1,49 @@
+[
+  {
+    "name": "docker_launcher",
+    "type": "proto",
+    "sources": ["DockerLauncher.proto"],
+    "targets": [
+      [
+        "web_backend",
+        "internal",
+        "generated"
+      ],
+      [
+        "docker_launcher",
+        "internal",
+        "generated"
+      ]
+    ]
+  },
+  {
+    "name": "common_utils",
+    "type": "raw_source",
+    "sources": ["common_utils"],
+    "targets": [
+      [
+        "docker_launcher",
+        "internal",
+        "generated"
+      ]
+    ]
+  },
+  {
+    "name": "docker_compose_environments",
+    "type": "one_off",
+    "sources": ["docker_dns_web_backend","frontend_build","docker_dns_docker_launcher"],
+    "targets": [
+        ["frontend_build","docker_dns_web_backend"],
+        ["frontend_build"],
+        ["docker_dns_docker_launcher"]
+    ]
+  },
+  {
+    "name": "nginx_environments",
+    "type": "one_off",
+    "sources": ["nginx_config","nginx.conf"],
+    "targets": [
+      ["nginx_config","nginx-dev.conf"]
+    ]
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "name": "my-webpack-project",
+  "version": "1.0.0",
+  "description": "My webpack project",
+  "main": "index.js",
+  "repository": "https://github.com/skamensky/skam.dev.git",
+  "author": "Shmuel Kamensky <shmuelkamensky@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/webpack": "^5.28.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "compression-webpack-plugin": "^10.0.0",
+    "declaration-bundler-webpack-plugin": "^1.0.3",
+    "sass": "^1.54.8",
+    "sass-loader": "^13.0.2",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.8.2",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "scripts": {
+    "build": "webpack --mode=production --node-env=production",
+    "start": "tsc -w",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch"
+  },
+  "devDependencies": {
+    "@webpack-cli/generators": "^2.5.0",
+    "css-loader": "^6.7.1",
+    "mini-css-extract-plugin": "^2.6.1",
+    "prettier": "^2.7.1",
+    "style-loader": "^3.3.1"
+  }
+}

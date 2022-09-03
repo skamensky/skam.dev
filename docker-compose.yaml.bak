@@ -1,0 +1,115 @@
+version: '3.8'
+
+# we prefix services with "docker_dns" so that it's obvious that we're using docker's DNS resolution to access containers from within other containers
+services:
+  docker_dns_redis:
+    shm_size: '2gb'
+    image: redis:6.2.5
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /mnt/redis_data
+      - type: bind
+        source: "./redis_config/redis.conf"
+        target: "/redis_data/redis.conf"
+    command:
+      - /redis_data/redis.conf
+    healthcheck:
+       test: ["CMD-SHELL", "redis-cli","ping"]
+  docker_dns_web_backend:
+    shm_size: '4gb'
+    build:
+      context: ./web_backend
+      shm_size: '256mb'
+    restart: always
+    volumes:
+      - type: volume
+        source: web_backend
+        target: /mnt/web_backend
+    env_file:
+      - scripts/secrets.env
+      - scripts/.effective-docker-env.env
+    ports:
+      - "8000:8000"
+  docker_dns_docker_launcher:
+    shm_size: '4gb'
+    build:
+      context: ./docker_launcher
+      shm_size: '256mb'
+    restart: always
+    volumes:
+      - type: volume
+        source: docker_launcher
+        target: /mnt/docker_launcher
+      - type: bind
+        source: var/run/docker.sock
+        target: var/run/docker.sock
+    env_file:
+      - scripts/secrets.env
+      - scripts/.effective-docker-env.env
+    ports:
+      - "9000:9000"
+  docker_dns_postgres:
+    shm_size: '4gb'
+    build:
+      context: ./postgres_config
+      shm_size: '256mb'
+    restart: always
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /mnt/postgres_data
+    env_file:
+      - scripts/secrets.env
+      - scripts/.effective-docker-env.env
+    environment:
+      - PGDATA=/mnt/postgres_data/pgdata
+    command: -c 'config_file=/postgres_working_dir/postgresql.conf'
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL","su","-u","postgres", "pg_isready","-d","postgres","-u","postgres","-p","5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 1
+  docker_dns_nginx:
+    shm_size: '2gb'
+    build:
+      context: ./nginx_config
+    volumes:
+      - type: volume
+        source: nginx_data
+        target: /mnt/nginx_data
+      - type: volume
+        source: static_files
+        target: /mnt/static_files
+      - type: volume
+        source: cert_data
+        target: /mnt/cert_data
+    env_file:
+      - scripts/secrets.env
+      - scripts/.effective-docker-env.env
+    ports:
+      - "80:80"
+      - "443:443"
+  docker_dns_certbot:
+    build:
+      context: ./certbot_config
+    volumes:
+      - type: volume
+        source: cert_data
+        target: /mnt/cert_data
+      - type: volume
+        source: nginx_data
+        target: /mnt/nginx_data
+    depends_on:
+      - nginx
+    profiles:
+      - prod
+
+volumes:
+  redis_data:
+  nginx_data:
+  static_files:
+  postgres_data:
+  cert_data:
