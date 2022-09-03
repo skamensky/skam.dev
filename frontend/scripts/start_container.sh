@@ -1,7 +1,7 @@
 set -e
 
 STAGE=$1
-function build_and_exit() {
+function copy_build_to_shared_volume() {
   /bin/rm -rf /mnt/frontend/dist
   /bin/cp -rf dist /mnt/frontend/
   exit 0
@@ -14,7 +14,7 @@ function watch_frontend(){
 
 
 if [ "$STAGE" = "prod" ]; then
-  build_and_exit
+  copy_build_to_shared_volume
 else
   watch_frontend
 fi

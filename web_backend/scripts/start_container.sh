@@ -8,7 +8,7 @@ function watch(){
 
 
 if [ "$STAGE" = "prod" ]; then
-  build_and_exit
+  ./main
 else
   watch
 fi

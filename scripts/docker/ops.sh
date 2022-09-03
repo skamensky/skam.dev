@@ -55,4 +55,3 @@ if [ "$COMMAND" == "up" ]; then
 elif [ "$COMMAND" == "down" ]; then
   down
 fi
-fi
