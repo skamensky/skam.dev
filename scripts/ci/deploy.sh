@@ -21,6 +21,6 @@ cp "$root_project_dir/scripts/env/secrets.env" ./scripts/env/secrets.env
 ssh_key_full_path="$HOME/$SSH_KEY_LOCATION_FROM_HOME"
 # replace these lines with your ssh credentials. Make sure docker and docker-compose are installed on the remote server
 rsync -Pav --exclude='.git/' --delete --delete-excluded -e "ssh -i $ssh_key_full_path" . ubuntu@$SSH_IP:/home/ubuntu/skam.dev
-ssh -i $ssh_key_full_path ubuntu@$SSH_IP -t "STAGE=prod cd skam.dev && /bin/bash ./scripts/docker/ops.sh up"
+ssh -i $ssh_key_full_path ubuntu@$SSH_IP -t "export STAGE=prod; cd skam.dev && /bin/bash ./scripts/docker/ops.sh up"
 
 cd $root_project_dir
