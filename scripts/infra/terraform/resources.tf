@@ -68,7 +68,7 @@ EOF
 }
 
 resource "aws_ebs_volume" "volume" {
-  size              = 250
+  size              = 15
   type              = "gp3"
   availability_zone = local.availability_zone
   tags = {
