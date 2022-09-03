@@ -25,7 +25,7 @@ fi
 export COMPOSE_COMPATIBILITY=true
 
 if [[ "$STAGE" == "prod" ]]; then
-   DOCKER_COMPOSE_FILE="docker-compose.yaml"
+   DOCKER_COMPOSE_FILE="docker-compose-prod.yaml"
    else
     DOCKER_COMPOSE_FILE="docker-compose-dev.yaml"
 fi
