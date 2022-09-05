@@ -101,20 +101,20 @@ mount_ebs(){
     else
         apt-get install xfsprogs
         # xfs supports storage quota's which can be useful for using in docker
-        mkfs -o pquota -t xfs /dev/xvdf
+        mkfs -t xfs /dev/xvdf
  fi
 
   if [[ "$mnt_contents" != "" ]]; then
     echo "Critical failure: /mnt/data directory is not empty before mounting. Cannot mount. Exiting early" >&2
       exit 1
     else
-      mount /dev/xvdf /mnt/data
+      mount -o defaults,nofail,pquota /dev/xvdf /mnt/data
   fi
 
   # remount file system on reboot
   cp /etc/fstab /etc/fstab.bak
   dev_uid=`blkid|grep /dev/xvdf|python3 -c "import sys;print(sys.stdin.read().split('\"')[1])"`
-  echo "UUID=$dev_uid  /mnt/data  xfs  defaults,nofail  0  2" >> /etc/fstab
+  echo "UUID=$dev_uid  /mnt/data  xfs  defaults,nofail,pquota  0  2" >> /etc/fstab
 
   # verify our fstab is valid
   umount /mnt/data && mount -a && touch "${DATA_DIR}/fstab-is-valid"
@@ -183,7 +183,6 @@ init_os(){
   touch "${SETUP_SENTINEL}"
   echo "Done setting up remote server"
 }
-
 
 # grouping commands to capture output as a single stream.
 # see https://www.gnu.org/software/bash/manual/html_node/Command-Grouping.html

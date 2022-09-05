@@ -1,4 +1,4 @@
-
+# TODO update google domain to point to new IP
 
 terraform {
   required_providers {

@@ -2,6 +2,22 @@
 
 CERTBOT_DATA_DIR="/mnt/cert_data/certbot"
 
+function wait_for_certbot_to_be_ready(){
+  echo "Waiting for certbot to be ready"
+  while [ ! -f /mnt/cert_data/status_for_nginx ]; do
+    # todo add timeout
+    sleep 1
+  done
+  result=$(cat /mnt/cert_data/status_for_nginx)
+  if [ "$result" != "OK" ]; then
+    echo "Certbot failed with message: $result. Exiting nginx early."
+    exit 1
+  else
+    echo "Certbot sent \"OK\" to nginx. Starting nginx"
+  fi
+
+}
+
 function init_volume() {
   mkdir -p /mnt/nginx_data/nginx/
   cp -rf /etc/nginx/* /mnt/nginx_data/nginx/
@@ -10,18 +26,9 @@ function init_volume() {
 
 function setup_ssl(){
   mkdir -p $CERTBOT_DATA_DIR
-  WEB_DIR="$CERTBOT_DATA_DIR/live/skam.dev"
   curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > $CERTBOT_DATA_DIR/conf/options-ssl-nginx.conf
   curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > $CERTBOT_DATA_DIR/conf/ssl-dhparams.pem
-  if [ ! -f "$WEB_DIR/privkey.pem" ]; then
-    # this is the first time we are running nginx. We need to create a dummy key.
-    # idea taken from https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71
-    # this key will be overwritten by the real key when certbot runs for the first time.
-    openssl req -x509 -nodes -newkey rsa:4096 -days 1 \
-        -keyout "$WEB_DIR/privkey.pem" \
-        -out "$WEB_DIR/fullchain.pem" \
-        -subj '/CN=localhost'
-  fi
+
 }
 
 function env_specific_commands(){
@@ -44,6 +51,7 @@ function nginx_reloader(){
   done
 }
 
+wait_for_certbot_to_be_ready
 env_specific_commands
 init_volume
 init_nginx

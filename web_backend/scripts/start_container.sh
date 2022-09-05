@@ -3,7 +3,8 @@ set -e
 STAGE=$1
 function watch(){
   cd /mnt/host/web_backend
-  CompileDaemon -pattern=".*" -command="./main" -build="go build -o main" -color="true"
+
+  CompileDaemon -exclude="main" -pattern=".*" -command="./main" -build="go build -o main" -color="true"
 }
 
 

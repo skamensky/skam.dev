@@ -69,10 +69,12 @@ services:
       - scripts/env/secrets.env
       - scripts/env/.effective-env.env
     ports:
-      - "80:80"
+# todo fix, currently there's a fconflct between this anc certbox
+      - "8000:80"
       - "443:443"
     depends_on:
       - docker_dns_web_backend
+      - docker_dns_certbot
   docker_dns_certbot:
     build:
       context: ./certbot_config
@@ -83,11 +85,11 @@ services:
       - type: volume
         source: nginx_data
         target: /mnt/nginx_data
-    depends_on:
-      - docker_dns_nginx
     env_file:
       - scripts/env/secrets.env
       - scripts/env/.effective-env.env
+    ports:
+      - "80:80"
 volumes:
   redis_data:
   nginx_data:

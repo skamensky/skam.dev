@@ -36,7 +36,9 @@ function up(){
   start_up_command="docker compose --project-name ${DOCKER_PROJECT_NAME} --env-file ${ENV_DIR}/.effective-env.env --profile ${STAGE} --file ${DOCKER_COMPOSE_FILE}  up  --remove-orphans"
 
   if [[ "$STAGE" == "prod" ]]; then
-     start_up_command="${start_up_command} --detach && docker system prune --force"
+    # TODO put prune back in after done debugging
+#     start_up_command="${start_up_command} --detach && docker system prune --force"
+     start_up_command="${start_up_command} --detach"
   fi
 
   echo "Running the following docker command in order to start up"

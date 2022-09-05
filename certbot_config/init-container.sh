@@ -2,6 +2,19 @@
 set -e
 set -x
 
+# unfortunately, docker compose 3 syntax stopped supporting conditional startup order. See
+# https://docs.docker.com/compose/startup-order/ and https://github.com/docker/compose/issues/4305
+# therefore we need to communicate directly between the images
+function signal_nginx_exit_status(){
+  if [ "$?" -eq 0 ]; then
+    status="OK"
+  else
+    status="ERROR, certbot exited with status $?"
+  fi
+  echo "$status" > /mnt/cert_data/status_for_nginx
+}
+trap signal_nginx_exit_status EXIT
+
 if [ "$STAGE" == "dev" ]; then
   echo "Currently in dev mode. No need to run certbot. Exiting the container"
   exit 0
@@ -10,28 +23,30 @@ fi
 export CERTBOT_DATA_DIR="/mnt/cert_data/certbot"
 export INIT_SENTINEL_FILE="$CERTBOT_DATA_DIR/initial-setup-complete.sentinel"
 
+# TODO add ,shmuelkamensky.com,www.shmuelkamensky.com
+DOMAINS="skam.dev,www.skam.dev"
 
-
+EMAIL="shmuelkamensky@gmail.com"
 function first_time_challenges(){
-
   mkdir -p /mnt/cert_data/logs
-  # TODO, update or delete this comment. Do we actually need to delete the certificates manually?
-  # the workflow is that nginx creates dummy certs. Make sure those are deleted.
+
   rm -rf /mnt/cert_data/certbot/live/skam.dev
-  certbot \
-    certonly  \
-    --webroot \
+  mkdir -p /mnt/cert_data/certbot/conf/
+  certbot certonly \
+    --standalone \
+    --non-interactive \
     --agree-tos \
+    --email $EMAIL \
     --no-eff-email \
-    --webroot-path=/mnt/cert_data/certbot/conf/ \
-    --email shmuelkamensky@gmail.com \
-    --domains skam.dev,www.skam.dev,shmuelkamensky.com,www.shmuelkamensky.com \
-    --config-dir $CERTBOT_DATA_DIR \
+    --domains $DOMAINS \
+    --preferred-challenges http-01 \
+    --http-01-port 80 \
     --logs-dir /mnt/cert_data/logs \
+    --config-dir $CERTBOT_DATA_DIR \
+    --webroot-path="$CERTBOT_DATA_DIR/conf" \
     --key-path "$CERTBOT_DATA_DIR/conf/skam.dev/privkey.pem" \
     --fullchain-path "$CERTBOT_DATA_DIR/conf/skam.dev/fullchain.pem" \
-     && touch $INIT_SENTINEL_FILE
-
+    && touch $INIT_SENTINEL_FILE
 }
 
 function renew_every_12_hours(){
@@ -50,4 +65,6 @@ else
   echo "first_time_challenges has run in the past. Skipping first time challenges."
 fi
 
+# if we got here, nginx can start
+echo "OK" > /mnt/cert_data/status_for_nginx
 renew_every_12_hours

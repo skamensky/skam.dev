@@ -115,8 +115,10 @@ I decided early on to only support linux for both the target and development pla
 I can rely on POSIX and it greatly simplifies my life.
 
 ### Dependencies
-You need `protoc` available on your PATH variable
-
+To run this from scratch, you need
+1. `protoc`
+2. `awscli` with default authentication
+3. `gcloud` with default authentication 
 
 ## MISC
 only difference between dev and prod compose files should be bind mounts. Don't modify dev directly. Generate it.

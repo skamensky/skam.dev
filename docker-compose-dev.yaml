@@ -2,11 +2,11 @@ services:
     docker_dns_certbot:
         build:
             context: ./certbot_config
-        depends_on:
-            - docker_dns_nginx
         env_file:
             - scripts/env/secrets.env
             - scripts/env/.effective-env.env
+        ports:
+            - 80:80
         volumes:
             - source: cert_data
               target: /mnt/cert_data
@@ -42,11 +42,12 @@ services:
             context: ./nginx_config
         depends_on:
             - docker_dns_web_backend
+            - docker_dns_certbot
         env_file:
             - scripts/env/secrets.env
             - scripts/env/.effective-env.env
         ports:
-            - 80:80
+            - 8000:80
             - 443:443
         shm_size: 2gb
         volumes:
